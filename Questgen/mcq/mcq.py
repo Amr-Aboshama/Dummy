@@ -16,9 +16,9 @@ import string
 import pke
 import nltk
 from nltk import FreqDist
-nltk.download('brown')
+""" nltk.download('brown')
 nltk.download('stopwords')
-nltk.download('popular')
+nltk.download('popular') """
 from nltk.corpus import stopwords
 from nltk.corpus import brown
 from similarity.normalized_levenshtein import NormalizedLevenshtein
@@ -88,8 +88,8 @@ def get_options(answer,s2v):
     return distractors,"None"
 
 def tokenize_sentences(text):
-    sentences = [sent_tokenize(text)]
-    sentences = [y for x in sentences for y in x]
+    sentences = sent_tokenize(text)
+    
     # Remove any short sentences less than 20 letters.
     sentences = [sentence.strip() for sentence in sentences if len(sentence) > 20]
     return sentences
@@ -167,7 +167,7 @@ def get_nouns_multipartite(text):
 
     for key in keyphrases:
         out.append(key[0])
-
+    
     return out
 
 
@@ -215,36 +215,12 @@ def get_keywords(nlp,text,max_keywords,s2v,fdist,normalized_levenshtein,no_of_se
 
 
 def generate_questions_mcq(keyword_sent_mapping,device,tokenizer,model,sense2vec,normalized_levenshtein):
-    batch_text = []
     answers = keyword_sent_mapping.keys()
-    for answer in answers:
-        txt = keyword_sent_mapping[answer]
-        context = "context: " + txt
-        text = context + " " + "answer: " + answer + " </s>"
-        batch_text.append(text)
+    output_array = {}
+    output_array["questions"] = []
 
-    encoding = tokenizer.batch_encode_plus(batch_text, pad_to_max_length=True, return_tensors="pt")
-
-
-    print ("Running model for generation")
-    input_ids, attention_masks = encoding["input_ids"].to(device), encoding["attention_mask"].to(device)
-
-    with torch.no_grad():
-        outs = model.generate(input_ids=input_ids,
-                              attention_mask=attention_masks,
-                              max_length=150)
-
-    output_array ={}
-    output_array["questions"] =[]
-#     print(outs)
     for index, val in enumerate(answers):
         individual_question ={}
-        out = outs[index, :]
-        dec = tokenizer.decode(out, skip_special_tokens=True, clean_up_tokenization_spaces=True)
-
-        Question = dec.replace("question:", "")
-        Question = Question.strip()
-        individual_question["question_statement"] = Question
         individual_question["question_type"] = "MCQ"
         individual_question["answer"] = val
         individual_question["id"] = index+1
@@ -254,7 +230,7 @@ def generate_questions_mcq(keyword_sent_mapping,device,tokenizer,model,sense2vec
         index = 3
         individual_question["extra_options"]= individual_question["options"][index:]
         individual_question["options"] = individual_question["options"][:index]
-        individual_question["context"] = keyword_sent_mapping[val]
+        individual_question["context"] = keyword_sent_mapping[val].replace(val,"____")
      
         if len(individual_question["options"])>0:
             output_array["questions"].append(individual_question)
