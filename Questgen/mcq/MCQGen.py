@@ -6,7 +6,7 @@ from nltk.corpus import brown
 from sense2vec import Sense2Vec
 from similarity.normalized_levenshtein import NormalizedLevenshtein
 from Questgen.mcq.mcq import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
-                             filter_phrases, sense2vec_get_words
+                             filter_phrases, sense2vec_get_words, get_options
 
 
 
@@ -71,7 +71,7 @@ class MCQGen:
             individual_question["question_type"] = "MCQ"
             individual_question["answer"] = val
             individual_question["id"] = index+1
-            individual_question["options"], individual_question["options_algorithm"] = self.get_options(val, sense2vec)
+            individual_question["options"], individual_question["options_algorithm"] = get_options(val, sense2vec)
             individual_question["options"] =  filter_phrases(individual_question["options"], 10,normalized_levenshtein)
             index = 3
             individual_question["extra_options"]= individual_question["options"][index:]
@@ -81,17 +81,3 @@ class MCQGen:
                 output_array["questions"].append(individual_question)
 
         return output_array
-
-    def get_options(self, answer,s2v):
-        distractors =[]
-
-        try:
-            distractors = sense2vec_get_words(answer,s2v)
-            if len(distractors) > 0:
-                print(" Sense2vec_distractors successful for word : ", answer)
-                return distractors,"sense2vec"
-        except:
-            print (" Sense2vec_distractors failed for word : ",answer)
-
-
-        return distractors,"None"
