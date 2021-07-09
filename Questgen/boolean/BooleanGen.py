@@ -8,8 +8,8 @@ from nltk.corpus import brown
 from transformers import T5ForConditionalGeneration,T5Tokenizer
 from sense2vec import Sense2Vec
 from similarity.normalized_levenshtein import NormalizedLevenshtein
-from Questgen.mcq.mcq import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
-                             filter_phrases, sense2vec_get_words, get_options
+from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
+                            get_options
 
 
 
@@ -32,18 +32,14 @@ class BoolGen:
 
 
     def predict_boolq(self,payload):
-        inp = {
-            "input_text": payload.get("input_text"),
-            "max_questions": payload.get("max_questions", 4)
-        }
+        text = payload.get("input_text")
+        topics_num = payload.get('topics_num')
 
-        text = inp['input_text']
-        num= inp['max_questions']
         sentences = tokenize_sentences(text)
         joiner = " "
         modified_text = joiner.join(sentences)
         
-        keywords = get_keywords(self.nlp,modified_text,inp['max_questions'],self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
+        keywords = get_keywords(self.nlp,modified_text,topics_num,self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
 
 
         keyword_sentence_mapping = get_sentences_for_keyword(keywords, sentences)
@@ -96,18 +92,14 @@ class BoolGen:
     
 
     def predict_tf(self,payload):
-        inp = {
-            "input_text": payload.get("input_text"),
-            "max_questions": payload.get("max_questions", 4)
-        }
-
-        text = inp['input_text']
-        num= inp['max_questions']
+        
+        text = payload.get("input_text")
+        topics_num = payload.get('topics_num')
         sentences = tokenize_sentences(text)
         joiner = " "
         modified_text = joiner.join(sentences)
         
-        keywords = get_keywords(self.nlp,modified_text,inp['max_questions'],self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
+        keywords = get_keywords(self.nlp,modified_text,topics_num,self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
 
         keyword_sentence_mapping = get_sentences_for_keyword(keywords, sentences)
         

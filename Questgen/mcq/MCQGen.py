@@ -5,8 +5,8 @@ from nltk import FreqDist
 from nltk.corpus import brown
 from sense2vec import Sense2Vec
 from similarity.normalized_levenshtein import NormalizedLevenshtein
-from Questgen.mcq.mcq import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
-                             filter_phrases, sense2vec_get_words, get_options
+from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
+                             filter_phrases, get_options
 
 
 

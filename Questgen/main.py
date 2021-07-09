@@ -17,7 +17,6 @@ import re
 import time
 import torch
 from transformers import T5ForConditionalGeneration,T5Tokenizer
-import random
 import spacy
 import os
 from sense2vec import Sense2Vec
@@ -25,10 +24,7 @@ import numpy
 from nltk import FreqDist
 from nltk.corpus import brown
 from similarity.normalized_levenshtein import NormalizedLevenshtein
-from nltk.tokenize import sent_tokenize
-#from flashtext import KeywordProcessor
-from Questgen.encoding.encoding import beam_search_decoding
-from Questgen.mcq.mcq import get_options, tokenize_sentences, get_keywords, get_sentences_for_keyword, \
+from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
                              generate_questions_mcq, generate_normal_questions
 
 
@@ -38,7 +34,7 @@ class QGen:
         
         self.tokenizer = T5Tokenizer.from_pretrained('t5-base')
         
-        model = T5ForConditionalGeneration.from_pretrained(os.getcwd()+"/Questgen/models/result")
+        model = T5ForConditionalGeneration.from_pretrained(os.getcwd()+"/Questgen/models/question_generator")
         
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         
@@ -62,17 +58,14 @@ class QGen:
             
     def predict_mcq(self, payload):
         start = time.time()
-        inp = {
-            "input_text": payload.get("input_text"),
-            "max_questions": payload.get("max_questions", 4)
-        }
 
-        text = inp['input_text']
+        text = payload.get("input_text")
+        topics_num = payload.get('topics_num')
         sentences = tokenize_sentences(text)
         joiner = " "
         modified_text = joiner.join(sentences)
         
-        keywords = get_keywords(self.nlp,modified_text,inp['max_questions'],self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
+        keywords = get_keywords(self.nlp,modified_text,topics_num,self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
 
         keyword_sentence_mapping = get_sentences_for_keyword(keywords, sentences)
 
@@ -102,18 +95,14 @@ class QGen:
             return final_output
     
     def predict_shortq(self, payload):
-        inp = {
-            "input_text": payload.get("input_text"),
-            "max_questions": payload.get("max_questions", 4)
-        }
-
-        text = inp['input_text']
+        text = payload.get("input_text")
+        topics_num = payload.get('topics_num')
         sentences = tokenize_sentences(text)
         joiner = " "
         modified_text = joiner.join(sentences)
 
 
-        keywords = get_keywords(self.nlp,modified_text,inp['max_questions'],self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
+        keywords = get_keywords(self.nlp,modified_text,topics_num,self.s2v,self.fdist,self.normalized_levenshtein,len(sentences) )
 
 
         keyword_sentence_mapping = get_sentences_for_keyword(keywords, sentences)
@@ -130,8 +119,7 @@ class QGen:
         else:
             
             generated_questions = generate_normal_questions(keyword_sentence_mapping,self.device,self.tokenizer,self.model)
-            print(generated_questions)
-
+            
             
         final_output["statement"] = modified_text
         final_output["questions"] = generated_questions["questions"]
@@ -143,13 +131,9 @@ class QGen:
             
   
     def paraphrase(self,payload):
-        inp = {
-            "input_text": payload.get("input_text"),
-            "max_questions": payload.get("max_questions", 3)
-        }
-
-        text = inp['input_text']
-        num = inp['max_questions']
+        
+        text = payload.get("input_text")
+        num = payload.get("max_questions", 3)
         
         self.sentence= text
         self.text= "paraphrase: " + self.sentence + " </s>"
@@ -167,35 +151,29 @@ class QGen:
             early_stopping=True
             )
 
-#         print ("\nOriginal Question ::")
-#         print (text)
-#         print ("\n")
-#         print ("Paraphrased Questions :: ")
         final_outputs =[]
         for beam_output in beam_outputs:
             sent = self.tokenizer.decode(beam_output, skip_special_tokens=True,clean_up_tokenization_spaces=True)
             if sent.lower() != self.sentence.lower() and sent not in final_outputs:
-                final_outputs.append(sent)
+                final_outputs.append(sent.replace('ParaphrasedTarget: ', ''))
         
         output= {}
-        output['Question']= text
+        output['Paragraph']= text
         output['Count']= num
         output['Paraphrased Questions']= final_outputs
         
-        for i, final_output in enumerate(final_outputs):
-            print("{}: {}".format(i, final_output))
 
         if torch.device=='cuda':
             torch.cuda.empty_cache()
         
         return output
-        
+
             
 class AnswerPredictor:
           
     def __init__(self):
         self.tokenizer = T5Tokenizer.from_pretrained('t5-base')
-        model = T5ForConditionalGeneration.from_pretrained(os.getcwd()+"/Questgen/models/boolean")
+        model = T5ForConditionalGeneration.from_pretrained(os.getcwd()+"/Questgen/models/answer_predictor")
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model.to(device)
         # model.eval()
