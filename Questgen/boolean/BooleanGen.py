@@ -1,13 +1,6 @@
 import re
 import random
-import spacy
-import os
 import torch
-from nltk import FreqDist
-from nltk.corpus import brown
-from transformers import T5ForConditionalGeneration,T5Tokenizer
-from sense2vec import Sense2Vec
-from similarity.normalized_levenshtein import NormalizedLevenshtein
 from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
                             get_options
 
@@ -15,21 +8,22 @@ from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_f
 
 class BoolGen:
        
-    def __init__(self):
-        self.tokenizer = T5Tokenizer.from_pretrained('t5-base')
-        model = T5ForConditionalGeneration.from_pretrained(os.getcwd()+"/Questgen/models/t5_boolean_questions")
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    def __init__(self, base):
+        self.tokenizer = base.tokenizer
+        
+        self.nlp = base.nlp
+ 
+        self.s2v = base.s2v
+        
+        model = base.model
+        device = base.device
         model.to(device)
-        # model.eval()
         self.device = device
         self.model = model
-        self.nlp = spacy.load('en_core_web_sm')
- 
-        self.s2v = Sense2Vec().from_disk('s2v_old')
-        
-        self.fdist = FreqDist(brown.words())
-        self.normalized_levenshtein = NormalizedLevenshtein()
 
+        self.fdist = base.fdist
+        self.normalized_levenshtein = base.normalized_levenshtein
+        
 
     def predict_boolq(self,payload):
         text = payload.get("input_text")

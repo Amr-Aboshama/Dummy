@@ -4,6 +4,7 @@ from pprint import pprint
 from Questgen import main
 from Questgen.mcq.MCQGen import MCQGen
 from Questgen.boolean.BooleanGen import BoolGen
+from Questgen.base import Base
 
 payload = {
             "input_text": "Sachin Ramesh Tendulkar is a former international cricketer from India and a former captain of the Indian national team. He is widely regarded as one of the greatest batsmen in the history of cricket. He is the highest run scorer of all time in International cricket.",
@@ -11,23 +12,25 @@ payload = {
             "topics_num": 3
           }
 
+base = Base()
+
 def testTF():
-    boolGen = BoolGen()
+    boolGen = BoolGen(base)
     output = boolGen.predict_tf(payload)
     pprint(output)
 
 def testMCQ():
-    mcqGen = MCQGen()
+    mcqGen = MCQGen(base)
     output = mcqGen.predict_mcq(payload)
     pprint(output)
 
 def testFAQ():
-    qg = main.QGen()
+    qg = main.QGen(base)
     output = qg.predict_shortq(payload)
     pprint(output)
 
 def testParaphrasing():
-    qg = main.QGen()
+    qg = main.QGen(base)
     output = qg.paraphrase(payload)
     pprint(output)
     return output

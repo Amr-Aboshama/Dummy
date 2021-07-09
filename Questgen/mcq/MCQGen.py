@@ -1,10 +1,5 @@
 import re
 import time
-import spacy
-from nltk import FreqDist
-from nltk.corpus import brown
-from sense2vec import Sense2Vec
-from similarity.normalized_levenshtein import NormalizedLevenshtein
 from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
                              filter_phrases, get_options
 
@@ -12,12 +7,15 @@ from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_f
 
 class MCQGen:
     
-    def __init__(self):
-        self.nlp = spacy.load('en_core_web_sm')
-        self.s2v = Sense2Vec().from_disk('s2v_old')
-        self.fdist = FreqDist(brown.words())
-        self.normalized_levenshtein = NormalizedLevenshtein()
-
+    def __init__(self, base):
+        self.nlp = base.nlp
+ 
+        self.s2v = base.s2v
+        
+        self.fdist = base.fdist
+        
+        self.normalized_levenshtein = base.normalized_levenshtein
+        
         
     def predict_mcq(self, payload):
         start = time.time()

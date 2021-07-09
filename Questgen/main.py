@@ -1,60 +1,35 @@
-#import numpy as np # linear algebra
-#import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-#import boto3
-#import zipfile
 #nltk.download('brown')
 #nltk.download('stopwords')
 #nltk.download('popular')
-#from nltk.corpus import stopwords
-#import requests
-#from collections import OrderedDict
-#import string
-#import pke
-#import nltk
-#import json
 
-import re
 import time
 import torch
 from transformers import T5ForConditionalGeneration,T5Tokenizer
-import spacy
 import os
-from sense2vec import Sense2Vec
 import numpy 
-from nltk import FreqDist
-from nltk.corpus import brown
-from similarity.normalized_levenshtein import NormalizedLevenshtein
 from Questgen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
                              generate_questions_mcq, generate_normal_questions
 
 
 class QGen:
     
-    def __init__(self):
+    def __init__(self, base):
         
-        self.tokenizer = T5Tokenizer.from_pretrained('t5-base')
+        self.tokenizer = base.tokenizer
         
-        model = T5ForConditionalGeneration.from_pretrained(os.getcwd()+"/Questgen/models/question_generator")
+        self.nlp = base.nlp
+ 
+        self.s2v = base.s2v
         
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+        model = base.model
+        device = base.device
         model.to(device)
-        # model.eval()
         self.device = device
         self.model = model
-        self.nlp = spacy.load('en_core_web_sm')
- 
-        self.s2v = Sense2Vec().from_disk('s2v_old')
+
+        self.fdist = base.fdist
+        self.normalized_levenshtein = base.normalized_levenshtein
         
-        self.fdist = FreqDist(brown.words())
-        self.normalized_levenshtein = NormalizedLevenshtein()
-        self.set_seed(42)
-        
-    def set_seed(self,seed):
-        numpy.random.seed(seed)
-        torch.manual_seed(seed)
-        if torch.cuda.is_available():
-            torch.cuda.manual_seed_all(seed)
             
     def predict_mcq(self, payload):
         start = time.time()
