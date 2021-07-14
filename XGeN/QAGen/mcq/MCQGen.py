@@ -1,10 +1,10 @@
 import re
 import time
 import random
-from XGeN.QAGen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
+from QAGen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, \
                              filter_phrases, get_options
 
-from XGeN.QAGen.QGen import QGen
+from QAGen.QGen import QGen
 
 
 class MCQGen(QGen):

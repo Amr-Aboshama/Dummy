@@ -2,9 +2,9 @@ import re
 import random
 from typing import Set
 import torch
-from XGeN.QAGen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, get_options
+from QAGen.utilities import tokenize_sentences, get_keywords, get_sentences_for_keyword, get_options
 
-from XGeN.QAGen.QGen import QGen
+from QAGen.QGen import QGen
 
 
 class BoolGen(QGen):
