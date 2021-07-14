@@ -1,26 +1,25 @@
 from flask import Flask, request
 from flask_ngrok import run_with_ngrok
-import ast
 from flask_cors import CORS
 import os
 import sys
 import uuid
 
-from Preprocessor.preprocessor import Preprocessor
-from Preprocessor.utilities import solve_coreference, clean_text, word_segmentation, need_segmentation
+from XGeN.Preprocessor.preprocessor import Preprocessor
+from XGeN.Preprocessor.utilities import solve_coreference, clean_text, word_segmentation, need_segmentation
 
-from InfoExtract.TopicExtractor import TopicExtractor
+from XGeN.InfoExtract.TopicExtractor import TopicExtractor
 
-from QAGen.Loader import Loader
-from QAGen.QGen import QGen
-from QAGen.mcq.MCQGen import MCQGen
-from QAGen.boolean.BooleanGen import BoolGen
-from QAGen.tf.TFGen import TFGen
-from QAGen.shortq.ShortGen import ShortGen
-from QAGen.longq.LongGen import LongGen
-from QAGen.anspred.AnswerPredictor import AnswerPredictor
+from XGeN.QAGen.Loader import Loader
+from XGeN.QAGen.QGen import QGen
+from XGeN.QAGen.mcq.MCQGen import MCQGen
+from XGeN.QAGen.boolean.BooleanGen import BoolGen
+from XGeN.QAGen.tf.TFGen import TFGen
+from XGeN.QAGen.shortq.ShortGen import ShortGen
+from XGeN.QAGen.longq.LongGen import LongGen
+from XGeN.QAGen.anspred.AnswerPredictor import AnswerPredictor
 
-from Ranker.Ranker import filter_phrases, rank_phrases
+from XGeN.Ranker.Ranker import filter_phrases, rank_phrases
 
 
 
@@ -167,6 +166,7 @@ def uploadText():
         #print(text_payload.split('\n\n'))
         phrase = preprocess(phrase)
         text += " " + phrase
+        phrases.append(phrase)
 
     # print(7)
     # # Process the text    
@@ -196,8 +196,6 @@ def examSpecifications():
     mcq_questions = []
     # Convert it from string to list
     #print(selected_topics)
-    selected_topics = ast.literal_eval(selected_topics)
-    #print(selected_topics)
     
     # Load the user paragraphs & topics
     phrases = {}
@@ -208,7 +206,13 @@ def examSpecifications():
                 break
             topics = file.readline().split(';')
             phrases[phrase] = topics
-    
+            
+            # Add the new topics to the phrases
+            for keyword in selected_topics:
+                keyword = keyword.lower()
+                if keyword not in topics and phrase.lower().find(keyword) != -1:
+                    phrases[phrase].insert(0,keyword)
+            
     # Filter The paragraphs based on the selected topics
     filtered_phrases = rank_phrases(selected_topics, phrases)
     
