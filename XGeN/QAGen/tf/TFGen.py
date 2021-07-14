@@ -1,9 +1,8 @@
 import re
 import random
-from difflib import SequenceMatcher
 #from nltk.stem import PorterStemmer
 
-from QAGen.utilities import tokenize_sentences, get_sentences_for_keyword, get_options, filter_phrases
+from QAGen.utilities import tokenize_sentences, get_sentences_for_keyword, find_alternative
 from QAGen.QGen import QGen
 
 
@@ -39,7 +38,7 @@ class TFGen(QGen):
             answer = "T"
             # Make a false question
             if(bool(random.getrandbits(1)) and sentence.find(key) != -1):
-                option = self.find_alternative(key)
+                option = find_alternative(key, self.s2v, self.normalized_levenshtein)
                 if option != key:
                     correction = option + " -> " + key
                     answer = "F,        " + correction
@@ -49,25 +48,3 @@ class TFGen(QGen):
             output_array.append((sentence, answer))
                 
         return output_array
-
-    
-    def find_alternative(self, key):
-        options = get_options(key, self.s2v)
-        options =  filter_phrases(options, 10, self.normalized_levenshtein)
-
-        while(len(options) > 0):
-            option = random.choice(options)
-            if SequenceMatcher(None, option.lower(), key.lower()).ratio() < 0.7:
-                return option
-            options.remove(option)
-        #if len(options[0]):
-        #    option = options[0][0]
-            # Note: The next line may cause an infinite loop
-            #while SequenceMatcher(None, option.lower(), key.lower()).ratio() > 0.7:
-            #    print(option, key, SequenceMatcher(None, option, key).ratio())
-            #    option = random.choice(options[0])
-        #for option in options[0]:
-        #    if SequenceMatcher(None, option.lower(), key.lower()).ratio() < 0.7:
-        #        #print(option, key, SequenceMatcher(None, option, key).ratio())
-        #        return option
-        return key
