@@ -264,3 +264,6 @@ def examSpecifications():
         "tf_questions" : tf_questions,
         "mcq_questions" : mcq_questions, 
     }
+
+if __name__ == '__main__':
+    app.run()
