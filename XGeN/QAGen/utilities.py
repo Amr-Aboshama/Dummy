@@ -222,10 +222,9 @@ def random_choice():
     return bool(a)
     
 
-def find_alternative(key, s2v, normalized_levenshtein, filter=True):
-    options = get_options(key, s2v)
-    if filter:
-        options =  filter_phrases(options, 10, normalized_levenshtein)
+def find_alternative(key, s2v, normalized_levenshtein):
+    options, _ = get_options(key, s2v)
+    options =  filter_phrases(options, 10, normalized_levenshtein)
 
     while(len(options) > 0):
         option = random.choice(options)
