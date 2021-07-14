@@ -27,7 +27,7 @@ class MCQGen(QGen):
             return []
         else:
             try:
-                generated_questions = self.__generate_questions_mcq(keyword_sentence_mapping,self.s2v,self.normalized_levenshtein)
+                generated_questions = self.__generate_questions_mcq(keyword_sentence_mapping,self.s2v)
 
             except:
                 #return final_output
@@ -39,7 +39,7 @@ class MCQGen(QGen):
             #return final_output
             return generated_questions
 
-    def __generate_questions_mcq(self, keyword_sentence_mapping,sense2vec,normalized_levenshtein):
+    def __generate_questions_mcq(self, keyword_sentence_mapping,sense2vec):
         answers = keyword_sentence_mapping.keys()
         output_array = []
         #output_array["questions"] = []
@@ -55,13 +55,13 @@ class MCQGen(QGen):
             # The next line to replace with case insensitive
             context = re.sub(re.escape(val), "____", sentence, flags=re.IGNORECASE)
             options, _ = get_options(val, sense2vec)
-            options =  filter_phrases(options, 10,normalized_levenshtein)
+            options =  filter_phrases(options, 10, self.normalized_levenshtein)
 
             random_options = []
             while(len(options) > 0 and len(random_options) < 3):
                 option = random.choice(options)
                 random_options.append(option)
-                option.remove(option)
+                options.remove(option)
             
             #individual_question["context"] = context
             #individual_question["question_type"] = "MCQ"
