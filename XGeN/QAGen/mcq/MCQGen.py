@@ -55,7 +55,13 @@ class MCQGen(QGen):
             # The next line to replace with case insensitive
             context = re.sub(re.escape(val), "____", sentence, flags=re.IGNORECASE)
             options, _ = get_options(val, sense2vec)
-            options =  filter_phrases(options, 10,normalized_levenshtein)[:3]
+            options =  filter_phrases(options, 10,normalized_levenshtein)
+
+            random_options = []
+            while(len(options) > 0 and len(random_options) < 3):
+                option = random.choice(options)
+                random_options.append(option)
+                option.remove(option)
             
             #individual_question["context"] = context
             #individual_question["question_type"] = "MCQ"
@@ -67,15 +73,15 @@ class MCQGen(QGen):
             #individual_question["extra_options"]= individual_question["options"][index:]
             #individual_question["options"] = individual_question["options"][:index]
             
-            if len(options)>0:
-                options.insert(random.randint(0,len(options)),val)
-                if(len(options) < 4):
-                    options.append("All of the above")
-                if(len(options) < 4):
-                    options.append("None of the above")
+            if len(random_options)>0:
+                random_options.insert(random.randint(0,len(options)),val)
+                if(len(random_options) < 4):
+                    random_options.append("All of the above")
+                if(len(random_options) < 4):
+                    random_options.append("None of the above")
 
                 #output_array["questions"].append(individual_question)
-                output_array.append((context,val, options))
+                output_array.append((context,val, random_options))
 
                 used_sentences.append(sentence)
             
